@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated ChromaDB vector store
+data/chromadb/
+
+# Environment secrets
+.env
