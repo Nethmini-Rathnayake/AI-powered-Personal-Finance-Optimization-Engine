@@ -20,6 +20,10 @@ sentence-transformers>=2.7.0
 pypdf>=4.2.0
 pymupdf>=1.24.0
 
+# UI
+streamlit>=1.35.0
+plotly>=5.20.0
+
 # Observability
 prometheus-fastapi-instrumentator>=7.0.0
 
