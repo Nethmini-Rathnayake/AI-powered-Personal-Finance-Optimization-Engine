@@ -22,6 +22,25 @@ class DebtInput(BaseModel):
     apr: float = Field(gt=0, lt=1, description="Decimal rate, e.g. 0.2399 = 23.99%")
     min_payment: float = Field(gt=0)
 
+    # Compounding
+    compounding: str = Field(default="monthly", pattern="^(monthly|daily)$")
+
+    # Minimum payment type
+    min_payment_type: str = Field(default="fixed", pattern="^(fixed|percent_of_balance)$")
+    min_payment_percent: float = Field(default=0.02, ge=0.0, le=1.0)
+
+    # Promotional rate
+    promo_apr: Optional[float] = Field(default=None, ge=0.0, lt=1.0)
+    promo_months: int = Field(default=0, ge=0)
+
+    # Variable rate schedule: [[start_month, new_apr], ...]
+    rate_changes: List[List[float]] = Field(default_factory=list)
+
+    # Prepayment penalty
+    prepayment_penalty_type: str = Field(default="none", pattern="^(none|flat|percent)$")
+    prepayment_penalty_value: float = Field(default=0.0, ge=0.0)
+    prepayment_penalty_months: int = Field(default=0, ge=0)
+
 
 class AnalyzeRequest(BaseModel):
     debts: List[DebtInput]
@@ -34,6 +53,24 @@ class AskRequest(BaseModel):
     debt_context: Optional[str] = None
 
 
+def _to_debt(d: DebtInput) -> Debt:
+    return Debt(
+        name=d.name,
+        balance=d.balance,
+        apr=d.apr,
+        min_payment=d.min_payment,
+        compounding=d.compounding,
+        min_payment_type=d.min_payment_type,
+        min_payment_percent=d.min_payment_percent,
+        promo_apr=d.promo_apr,
+        promo_months=d.promo_months,
+        rate_changes=d.rate_changes,
+        prepayment_penalty_type=d.prepayment_penalty_type,
+        prepayment_penalty_value=d.prepayment_penalty_value,
+        prepayment_penalty_months=d.prepayment_penalty_months,
+    )
+
+
 # --- Endpoints ---
 
 @app.get("/health")
@@ -44,7 +81,7 @@ def health():
 @app.post("/analyze")
 def analyze_debts(req: AnalyzeRequest):
     """Run Debt Avalanche (and optionally compare with Snowball) on supplied debts."""
-    debts = [Debt(d.name, d.balance, d.apr, d.min_payment) for d in req.debts]
+    debts = [_to_debt(d) for d in req.debts]
     try:
         if req.compare_with_snowball:
             return compare_strategies(debts, req.monthly_budget)

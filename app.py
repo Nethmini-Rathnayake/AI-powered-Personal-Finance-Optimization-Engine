@@ -1,13 +1,12 @@
 import os
 import sys
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -16,7 +15,7 @@ from src.ingestor.parser import parse_csv_text
 
 st.set_page_config(page_title="FinOps Engine", layout="wide")
 
-# ── Currency selector ─────────────────────────────────────────────────────────
+# ── Sidebar settings ──────────────────────────────────────────────────────────
 
 CURRENCIES: dict[str, str] = {
     "USD — US Dollar":         "$",
@@ -41,7 +40,7 @@ st.caption("Debt payoff optimizer — Avalanche method + RAG-powered advice")
 tab_manual, tab_csv, tab_ask = st.tabs(["Manual Input", "Upload CSV", "Ask AI"])
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def fmt(amount: float, sym: str) -> str:
     return f"{sym}{amount:,.2f}"
@@ -54,14 +53,27 @@ def df_to_debts(df: pd.DataFrame) -> list[Debt]:
         if not name or name == "nan":
             continue
         try:
-            debts.append(
-                Debt(
-                    name=name,
-                    balance=float(row["Balance"]),
-                    apr=float(row["APR (%)"]) / 100,
-                    min_payment=float(row["Min Payment"]),
-                )
-            )
+            promo_months_val = int(row.get("Promo Months", 0) or 0)
+            promo_apr_raw = row.get("Promo APR (%)", None)
+            promo_apr_val = None
+            if promo_months_val > 0 and promo_apr_raw is not None and not pd.isna(promo_apr_raw):
+                promo_apr_val = float(promo_apr_raw) / 100
+
+            penalty_pct = float(row.get("Prepay Penalty (%)", 0.0) or 0.0)
+
+            debts.append(Debt(
+                name=name,
+                balance=float(row["Balance"]),
+                apr=float(row["APR (%)"]) / 100,
+                min_payment=float(row["Min Payment"]),
+                compounding=str(row.get("Compounding", "monthly") or "monthly"),
+                min_payment_type=str(row.get("Min Pay Type", "fixed") or "fixed"),
+                promo_apr=promo_apr_val,
+                promo_months=promo_months_val,
+                prepayment_penalty_type="percent" if penalty_pct > 0 else "none",
+                prepayment_penalty_value=penalty_pct / 100,
+                prepayment_penalty_months=int(row.get("Penalty Window (mo)", 0) or 0),
+            ))
         except (ValueError, TypeError):
             continue
     return debts
@@ -99,6 +111,10 @@ def show_results(avalanche: dict, sym: str, comparison: dict | None = None) -> N
             delta=f"{abs(months_saved)} months faster" if months_saved > 0 else None,
         )
 
+    penalties = avalanche.get("total_penalties_paid", 0)
+    if penalties > 0:
+        st.caption(f"Includes {fmt(penalties, sym)} in prepayment penalties.")
+
     st.plotly_chart(
         balance_chart(avalanche, "Balance Over Time — Avalanche", sym),
         use_container_width=True,
@@ -131,16 +147,40 @@ def show_results(avalanche: dict, sym: str, comparison: dict | None = None) -> N
 with tab_manual:
     st.subheader("Your debts")
 
+    # All columns always present in the DataFrame; column_order controls visibility.
     default_df = pd.DataFrame([
-        {"Name": "Credit Card A", "Balance": 5000.0,  "APR (%)": 23.99, "Min Payment": 100.0},
-        {"Name": "Credit Card B", "Balance": 2500.0,  "APR (%)": 19.99, "Min Payment": 50.0},
-        {"Name": "Student Loan",  "Balance": 15000.0, "APR (%)": 6.75,  "Min Payment": 150.0},
+        {"Name": "Credit Card A", "Balance": 5000.0,  "APR (%)": 23.99, "Min Payment": 100.0,
+         "Compounding": "monthly", "Min Pay Type": "fixed",
+         "Promo APR (%)": 0.0, "Promo Months": 0, "Prepay Penalty (%)": 0.0, "Penalty Window (mo)": 0},
+        {"Name": "Credit Card B", "Balance": 2500.0,  "APR (%)": 19.99, "Min Payment": 50.0,
+         "Compounding": "monthly", "Min Pay Type": "fixed",
+         "Promo APR (%)": 0.0, "Promo Months": 0, "Prepay Penalty (%)": 0.0, "Penalty Window (mo)": 0},
+        {"Name": "Student Loan",  "Balance": 15000.0, "APR (%)": 6.75,  "Min Payment": 150.0,
+         "Compounding": "monthly", "Min Pay Type": "fixed",
+         "Promo APR (%)": 0.0, "Promo Months": 0, "Prepay Penalty (%)": 0.0, "Penalty Window (mo)": 0},
     ])
+
+    show_advanced = st.toggle("Show advanced loan terms", value=False)
+
+    basic_cols = ["Name", "Balance", "APR (%)", "Min Payment"]
+    advanced_cols = ["Compounding", "Min Pay Type", "Promo APR (%)", "Promo Months",
+                     "Prepay Penalty (%)", "Penalty Window (mo)"]
+    column_order = basic_cols + (advanced_cols if show_advanced else [])
+
+    if show_advanced:
+        st.caption(
+            "**Compounding**: daily = (1 + r/365)^(365/12) − 1 per month, slightly higher than monthly.  \n"
+            "**Min Pay Type**: *% of balance* — min payment shrinks as balance falls (credit-card style).  \n"
+            "**Promo APR / Promo Months**: e.g. 0% for 12 months on a balance transfer.  \n"
+            "**Prepay Penalty**: % of remaining balance charged when fully closing the debt early.  \n"
+            "**Penalty Window**: 0 = penalty applies for the entire loan; N = first N months only."
+        )
 
     debt_df = st.data_editor(
         default_df,
         num_rows="dynamic",
         use_container_width=True,
+        column_order=column_order,
         column_config={
             "Balance": st.column_config.NumberColumn(
                 f"Balance ({sym})", min_value=0.01, format=f"{sym}%.2f"
@@ -150,6 +190,28 @@ with tab_manual:
             ),
             "Min Payment": st.column_config.NumberColumn(
                 f"Min Payment ({sym})", min_value=0.01, format=f"{sym}%.2f"
+            ),
+            "Compounding": st.column_config.SelectboxColumn(
+                "Compounding", options=["monthly", "daily"]
+            ),
+            "Min Pay Type": st.column_config.SelectboxColumn(
+                "Min Pay Type", options=["fixed", "percent_of_balance"]
+            ),
+            "Promo APR (%)": st.column_config.NumberColumn(
+                "Promo APR (%)", min_value=0.0, max_value=99.99, format="%.2f%%",
+                help="Intro rate, e.g. 0 for a 0% balance-transfer offer"
+            ),
+            "Promo Months": st.column_config.NumberColumn(
+                "Promo Months", min_value=0,
+                help="How many months the promo rate applies"
+            ),
+            "Prepay Penalty (%)": st.column_config.NumberColumn(
+                "Prepay Penalty (%)", min_value=0.0, max_value=50.0, format="%.2f%%",
+                help="% of remaining balance charged when fully paying off early"
+            ),
+            "Penalty Window (mo)": st.column_config.NumberColumn(
+                "Penalty Window (mo)", min_value=0,
+                help="0 = always applies; N = penalty only in first N months"
             ),
         },
     )
