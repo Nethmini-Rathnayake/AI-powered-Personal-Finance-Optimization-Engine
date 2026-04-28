@@ -23,6 +23,7 @@ CURRENCIES: dict[str, str] = {
     "JPY — Japanese Yen":      "¥",
     "INR — Indian Rupee":      "₹",
     "SGD — Singapore Dollar":  "S$",
+    "LKR — Sri Lankan Rupee":  "Rs",
 }
 
 with st.sidebar:
