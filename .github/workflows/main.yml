@@ -32,8 +32,8 @@ jobs:
       - name: Security scan — static analysis (Bandit)
         run: bandit -r src/ -ll
 
-      - name: Security scan — dependency vulnerabilities (Safety)
-        run: safety check --full-report
+      - name: Security scan — dependency vulnerabilities (pip-audit)
+        run: pip-audit --desc on
         continue-on-error: true   # advisory; never hardblock on transitive vulns
 
   docker-build:
