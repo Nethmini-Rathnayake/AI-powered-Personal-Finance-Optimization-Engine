@@ -35,7 +35,7 @@ with st.sidebar:
     sym = CURRENCIES[currency_label]
 
 st.title("FinOps Engine")
-st.caption("Debt payoff optimizer — Avalanche method + RAG-powered advice")
+st.caption("Debt payoff optimizer — Avalanche method + agentic AI advisor")
 
 tab_manual, tab_csv, tab_ask = st.tabs(["Manual Input", "Upload CSV", "Ask AI"])
 
@@ -86,11 +86,7 @@ def balance_chart(result: dict, title: str, sym: str):
         for name, bal in s["balances"].items()
     ]
     fig = px.line(
-        pd.DataFrame(rows),
-        x="Month",
-        y="Balance",
-        color="Debt",
-        title=title,
+        pd.DataFrame(rows), x="Month", y="Balance", color="Debt", title=title,
         labels={"Balance": f"Balance ({sym})"},
     )
     fig.update_layout(hovermode="x unified", legend_title_text="")
@@ -106,8 +102,7 @@ def show_results(avalanche: dict, sym: str, comparison: dict | None = None) -> N
         saved = comparison["interest_saved_by_avalanche"]
         months_saved = comparison["months_saved_by_avalanche"]
         col3.metric(
-            "Saved vs Snowball",
-            fmt(saved, sym),
+            "Saved vs Snowball", fmt(saved, sym),
             delta=f"{abs(months_saved)} months faster" if months_saved > 0 else None,
         )
 
@@ -142,12 +137,71 @@ def show_results(avalanche: dict, sym: str, comparison: dict | None = None) -> N
         st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
 
+def render_tool_trace(trace: list[dict], sym: str) -> None:
+    """Render the agent's tool call trace as structured UI components."""
+    if not trace:
+        return
+    with st.expander(f"Agent reasoning — {len(trace)} tool call(s)"):
+        for i, call in enumerate(trace, 1):
+            tool = call["tool"]
+            st.markdown(f"**{i}. `{tool}`**")
+
+            if tool == "get_user_debts":
+                debts_list = call["result"].get("debts", [])
+                if debts_list:
+                    display_cols = [c for c in ("name", "balance", "apr_percent", "min_payment") if c in debts_list[0]]
+                    st.dataframe(
+                        pd.DataFrame(debts_list)[display_cols],
+                        use_container_width=True, hide_index=True,
+                    )
+                    st.caption(
+                        f"Total balance: {fmt(call['result']['total_balance'], sym)}  |  "
+                        f"Monthly minimums: {fmt(call['result']['total_monthly_minimums'], sym)}"
+                    )
+                else:
+                    st.caption(call["result"].get("note", "No debts found."))
+
+            elif tool == "run_avalanche_scenario":
+                res = call["result"]
+                if "error" in res:
+                    st.error(res["error"])
+                elif res.get("strategy") == "compare":
+                    av, sn = res["avalanche"], res["snowball"]
+                    c1, c2 = st.columns(2)
+                    c1.metric("Avalanche months", av["months_to_payoff"])
+                    c1.metric("Avalanche interest", fmt(av["total_interest"], sym))
+                    c2.metric("Snowball months", sn["months_to_payoff"])
+                    c2.metric("Snowball interest", fmt(sn["total_interest"], sym))
+                    if res["interest_saved_by_avalanche"] > 0:
+                        st.caption(
+                            f"Avalanche saves {fmt(res['interest_saved_by_avalanche'], sym)} "
+                            f"and {res['months_saved_by_avalanche']} month(s)."
+                        )
+                else:
+                    c1, c2 = st.columns(2)
+                    c1.metric("Months to payoff", res.get("months_to_payoff"))
+                    c2.metric("Total interest", fmt(res.get("total_interest_paid", 0), sym))
+
+            elif tool == "lookup_fee_clause":
+                clauses = call["result"].get("clauses", [])
+                if clauses:
+                    for clause in clauses[:2]:
+                        src = clause.get("source", "T&C")
+                        pg = clause.get("page")
+                        label = f"{src} p.{pg}" if pg is not None else src
+                        st.caption(f"[{label}] {clause['content'][:280]}…")
+                else:
+                    st.caption(call["result"].get("note") or call["result"].get("error", "No clauses found."))
+
+            if i < len(trace):
+                st.divider()
+
+
 # ── Manual Input ──────────────────────────────────────────────────────────────
 
 with tab_manual:
     st.subheader("Your debts")
 
-    # All columns always present in the DataFrame; column_order controls visibility.
     default_df = pd.DataFrame([
         {"Name": "Credit Card A", "Balance": 5000.0,  "APR (%)": 23.99, "Min Payment": 100.0,
          "Compounding": "monthly", "Min Pay Type": "fixed",
@@ -161,7 +215,6 @@ with tab_manual:
     ])
 
     show_advanced = st.toggle("Show advanced loan terms", value=False)
-
     basic_cols = ["Name", "Balance", "APR (%)", "Min Payment"]
     advanced_cols = ["Compounding", "Min Pay Type", "Promo APR (%)", "Promo Months",
                      "Prepay Penalty (%)", "Penalty Window (mo)"]
@@ -169,57 +222,30 @@ with tab_manual:
 
     if show_advanced:
         st.caption(
-            "**Compounding**: daily = (1 + r/365)^(365/12) − 1 per month, slightly higher than monthly.  \n"
-            "**Min Pay Type**: *% of balance* — min payment shrinks as balance falls (credit-card style).  \n"
-            "**Promo APR / Promo Months**: e.g. 0% for 12 months on a balance transfer.  \n"
-            "**Prepay Penalty**: % of remaining balance charged when fully closing the debt early.  \n"
-            "**Penalty Window**: 0 = penalty applies for the entire loan; N = first N months only."
+            "**Compounding**: daily = (1 + r/365)^(365/12) − 1 per month.  \n"
+            "**Min Pay Type**: *% of balance* — minimum shrinks as balance falls (credit-card style).  \n"
+            "**Promo APR / Promo Months**: 0% for N months on a balance transfer.  \n"
+            "**Prepay Penalty**: % of remaining balance charged when closing the debt early.  \n"
+            "**Penalty Window**: 0 = always; N = first N months only."
         )
 
     debt_df = st.data_editor(
-        default_df,
-        num_rows="dynamic",
-        use_container_width=True,
-        column_order=column_order,
+        default_df, num_rows="dynamic", use_container_width=True, column_order=column_order,
         column_config={
-            "Balance": st.column_config.NumberColumn(
-                f"Balance ({sym})", min_value=0.01, format=f"{sym}%.2f"
-            ),
-            "APR (%)": st.column_config.NumberColumn(
-                "APR (%)", min_value=0.01, max_value=99.99, format="%.2f%%"
-            ),
-            "Min Payment": st.column_config.NumberColumn(
-                f"Min Payment ({sym})", min_value=0.01, format=f"{sym}%.2f"
-            ),
-            "Compounding": st.column_config.SelectboxColumn(
-                "Compounding", options=["monthly", "daily"]
-            ),
-            "Min Pay Type": st.column_config.SelectboxColumn(
-                "Min Pay Type", options=["fixed", "percent_of_balance"]
-            ),
-            "Promo APR (%)": st.column_config.NumberColumn(
-                "Promo APR (%)", min_value=0.0, max_value=99.99, format="%.2f%%",
-                help="Intro rate, e.g. 0 for a 0% balance-transfer offer"
-            ),
-            "Promo Months": st.column_config.NumberColumn(
-                "Promo Months", min_value=0,
-                help="How many months the promo rate applies"
-            ),
-            "Prepay Penalty (%)": st.column_config.NumberColumn(
-                "Prepay Penalty (%)", min_value=0.0, max_value=50.0, format="%.2f%%",
-                help="% of remaining balance charged when fully paying off early"
-            ),
-            "Penalty Window (mo)": st.column_config.NumberColumn(
-                "Penalty Window (mo)", min_value=0,
-                help="0 = always applies; N = penalty only in first N months"
-            ),
+            "Balance": st.column_config.NumberColumn(f"Balance ({sym})", min_value=0.01, format=f"{sym}%.2f"),
+            "APR (%)": st.column_config.NumberColumn("APR (%)", min_value=0.01, max_value=99.99, format="%.2f%%"),
+            "Min Payment": st.column_config.NumberColumn(f"Min Payment ({sym})", min_value=0.01, format=f"{sym}%.2f"),
+            "Compounding": st.column_config.SelectboxColumn("Compounding", options=["monthly", "daily"]),
+            "Min Pay Type": st.column_config.SelectboxColumn("Min Pay Type", options=["fixed", "percent_of_balance"]),
+            "Promo APR (%)": st.column_config.NumberColumn("Promo APR (%)", min_value=0.0, max_value=99.99, format="%.2f%%"),
+            "Promo Months": st.column_config.NumberColumn("Promo Months", min_value=0),
+            "Prepay Penalty (%)": st.column_config.NumberColumn("Prepay Penalty (%)", min_value=0.0, max_value=50.0, format="%.2f%%"),
+            "Penalty Window (mo)": st.column_config.NumberColumn("Penalty Window (mo)", min_value=0),
         },
     )
 
     col_budget, col_compare = st.columns([2, 1])
-    budget = col_budget.number_input(
-        f"Monthly budget ({sym})", min_value=1.0, value=600.0, step=50.0
-    )
+    budget = col_budget.number_input(f"Monthly budget ({sym})", min_value=1.0, value=600.0, step=50.0)
     compare = col_compare.checkbox("Compare with Snowball", value=True)
 
     if st.button("Analyze", type="primary", key="analyze_manual"):
@@ -227,6 +253,7 @@ with tab_manual:
         if not debts:
             st.error("Add at least one debt row.")
         else:
+            st.session_state.current_debts = debts  # share with Ask AI tab
             try:
                 with st.spinner("Calculating..."):
                     if compare:
@@ -248,13 +275,12 @@ with tab_csv:
     )
 
     uploaded = st.file_uploader("Choose a CSV file", type=["csv"])
-    budget_csv = st.number_input(
-        f"Monthly budget ({sym})", min_value=1.0, value=600.0, step=50.0, key="csv_budget"
-    )
+    budget_csv = st.number_input(f"Monthly budget ({sym})", min_value=1.0, value=600.0, step=50.0, key="csv_budget")
 
     if uploaded and st.button("Analyze CSV", type="primary"):
         try:
             debts = parse_csv_text(uploaded.read().decode("utf-8"))
+            st.session_state.current_debts = debts  # share with Ask AI tab
             with st.spinner("Calculating..."):
                 result = compare_strategies(debts, budget_csv)
             show_results(result["avalanche"], sym, result)
@@ -267,32 +293,40 @@ with tab_csv:
 # ── Ask AI ────────────────────────────────────────────────────────────────────
 
 with tab_ask:
-    st.subheader("Ask anything about your debts")
+    st.subheader("Ask your debt advisor")
     st.caption(
-        "Answers are grounded in bank Terms & Conditions indexed via `POST /index-pdf`.  \n"
-        "Requires `ANTHROPIC_API_KEY` in your environment."
+        "The agent calls tools autonomously: it fetches your portfolio, runs exact "
+        "payoff math, and searches bank Terms & Conditions — then reasons across all "
+        "three before answering."
     )
 
     if not os.getenv("ANTHROPIC_API_KEY"):
-        st.warning(
-            "Set `ANTHROPIC_API_KEY` in your environment or `.env` file to enable this tab."
-        )
+        st.warning("Set `ANTHROPIC_API_KEY` in your `.env` file to enable this tab.")
     else:
+        current_debts: list[Debt] | None = st.session_state.get("current_debts")
+
+        if current_debts:
+            st.info(
+                f"{len(current_debts)} debt(s) loaded from the input tab — "
+                "the agent can access them via `get_user_debts()`."
+            )
+        else:
+            st.caption("No debts loaded yet. Go to Manual Input or Upload CSV first, or ask a general question.")
+
         question = st.text_input(
             "Your question",
-            placeholder="What fees apply if I miss a minimum payment?",
-        )
-        debt_context = st.text_area(
-            "Optional: paste a plain-text summary of your debts",
-            height=80,
+            placeholder="Which of my debts should I prioritise, and what will I save?",
         )
 
         if st.button("Ask", type="primary") and question:
-            from src.rag.knowledge_base import answer_question
+            from src.rag.agent import run_agent
 
-            with st.spinner("Retrieving relevant clauses and generating answer..."):
+            with st.spinner("Agent is reasoning..."):
                 try:
-                    answer = answer_question(question, debt_context)
-                    st.write(answer)
+                    answer, trace = run_agent(question, current_debts)
                 except Exception as exc:
                     st.error(f"Error: {exc}")
+                    st.stop()
+
+            st.write(answer)
+            render_tool_trace(trace, sym)

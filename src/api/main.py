@@ -7,8 +7,9 @@ from pydantic import BaseModel, Field
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.engine.avalanche import Debt, calculate_avalanche, compare_strategies
-from src.ingestor.parser import parse_csv_text, parse_pdf_statement
-from src.rag.knowledge_base import answer_question, index_pdf
+from src.ingestor.parser import parse_csv_text
+from src.rag.agent import run_agent
+from src.rag.knowledge_base import index_pdf
 
 app = FastAPI(title="FinOps Engine", version="1.0.0")
 Instrumentator().instrument(app).expose(app)
@@ -22,21 +23,15 @@ class DebtInput(BaseModel):
     apr: float = Field(gt=0, lt=1, description="Decimal rate, e.g. 0.2399 = 23.99%")
     min_payment: float = Field(gt=0)
 
-    # Compounding
     compounding: str = Field(default="monthly", pattern="^(monthly|daily)$")
-
-    # Minimum payment type
     min_payment_type: str = Field(default="fixed", pattern="^(fixed|percent_of_balance)$")
     min_payment_percent: float = Field(default=0.02, ge=0.0, le=1.0)
 
-    # Promotional rate
     promo_apr: Optional[float] = Field(default=None, ge=0.0, lt=1.0)
     promo_months: int = Field(default=0, ge=0)
 
-    # Variable rate schedule: [[start_month, new_apr], ...]
     rate_changes: List[List[float]] = Field(default_factory=list)
 
-    # Prepayment penalty
     prepayment_penalty_type: str = Field(default="none", pattern="^(none|flat|percent)$")
     prepayment_penalty_value: float = Field(default=0.0, ge=0.0)
     prepayment_penalty_months: int = Field(default=0, ge=0)
@@ -50,7 +45,7 @@ class AnalyzeRequest(BaseModel):
 
 class AskRequest(BaseModel):
     question: str
-    debt_context: Optional[str] = None
+    debts: Optional[List[DebtInput]] = None   # portfolio for the agent's get_user_debts tool
 
 
 def _to_debt(d: DebtInput) -> Debt:
@@ -109,14 +104,18 @@ async def analyze_from_csv(
 
 @app.post("/ask")
 def ask(req: AskRequest):
-    """RAG-powered Q&A grounded in indexed bank Terms & Conditions."""
+    """
+    Agentic debt advisor — Claude calls tools autonomously to answer the question.
+    Returns the final answer and the full tool-call trace for auditability.
+    """
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    debts = [_to_debt(d) for d in req.debts] if req.debts else None
     try:
-        answer = answer_question(req.question, req.debt_context or "")
+        answer, tool_trace = run_agent(req.question, debts)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-    return {"answer": answer}
+    return {"answer": answer, "tool_trace": tool_trace}
 
 
 @app.post("/index-pdf")
