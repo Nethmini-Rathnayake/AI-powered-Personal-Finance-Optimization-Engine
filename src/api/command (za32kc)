@@ -1,0 +1,6 @@
+/Users/nethmini/Documents/GitHub/FinOps-Engine/.venv/bin/python -c "
+from streamlit.testing.v1 import AppTest
+# Find the UploadedFile type used in AppTest
+import streamlit.testing.v1 as tv1
+print(dir(tv1))
+" 2>&1 | grep -v "^2026\|WARNING\|Thread\|ScriptRunContext"
