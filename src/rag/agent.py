@@ -1,19 +1,18 @@
 """
 Agentic debt advisor — Anthropic tool use, not a LangChain chain.
 
-Claude drives a multi-turn loop, deciding when to call each tool and
-chaining results across calls before producing a final grounded answer.
+The agent drives a multi-turn loop, deciding autonomously which tools to call
+and chaining results across multiple calls before producing a final grounded answer.
 
 Tools
 -----
-get_user_debts          – structured debt portfolio from the session
+get_user_debts          – structured debt portfolio from the current session
 run_avalanche_scenario  – exact payoff math via the Python engine
 lookup_fee_clause       – semantic search of indexed bank T&C documents
 """
 
 import json
 import os
-from typing import Optional
 
 import anthropic
 
@@ -125,8 +124,23 @@ Rules:
 
 # ── Tool executor ─────────────────────────────────────────────────────────────
 
-def _execute_tool(name: str, inputs: dict, debts: Optional[list[Debt]]) -> dict:
-    """Dispatch one tool call and return a JSON-serialisable result dict."""
+def _execute_tool(
+    name: str,
+    inputs: dict[str, object],
+    debts: list[Debt] | None,
+) -> dict[str, object]:
+    """
+    Dispatch a single tool call and return a JSON-serialisable result dict.
+
+    Args:
+        name: Tool name as declared in ``_TOOLS``.
+        inputs: Parsed input parameters provided by the model.
+        debts: The user's current debt portfolio, or None if not yet loaded.
+
+    Returns:
+        A dict that will be serialised to JSON and returned to the model as a
+        ``tool_result`` message.  Always returns a dict — never raises.
+    """
 
     # ── get_user_debts ────────────────────────────────────────────────────────
     if name == "get_user_debts":
@@ -157,50 +171,51 @@ def _execute_tool(name: str, inputs: dict, debts: Optional[list[Debt]]) -> dict:
         try:
             debt_objs = [
                 Debt(
-                    name=d["name"],
-                    balance=float(d["balance"]),
-                    apr=float(d["apr"]),
-                    min_payment=float(d["min_payment"]),
-                    compounding=d.get("compounding", "monthly"),
-                    promo_apr=d.get("promo_apr"),
-                    promo_months=int(d.get("promo_months", 0)),
+                    name=d["name"],  # type: ignore[index]
+                    balance=float(d["balance"]),  # type: ignore[index]
+                    apr=float(d["apr"]),  # type: ignore[index]
+                    min_payment=float(d["min_payment"]),  # type: ignore[index]
+                    compounding=d.get("compounding", "monthly"),  # type: ignore[union-attr]
+                    promo_apr=d.get("promo_apr"),  # type: ignore[union-attr]
+                    promo_months=int(d.get("promo_months", 0)),  # type: ignore[union-attr]
                 )
-                for d in inputs["debts"]
+                for d in inputs["debts"]  # type: ignore[union-attr]
             ]
-            budget = float(inputs["monthly_budget"])
+            budget = float(inputs["monthly_budget"])  # type: ignore[arg-type]
             strategy = inputs.get("strategy", "avalanche")
 
             if strategy == "compare":
                 r = compare_strategies(debt_objs, budget)
-                av, sn = r["avalanche"], r["snowball"]
+                av = r["avalanche"]  # type: ignore[index]
+                sn = r["snowball"]   # type: ignore[index]
                 return {
                     "strategy": "compare",
                     "avalanche": {
-                        "months_to_payoff": av["months_to_payoff"],
-                        "total_interest": av["total_interest_paid"],
-                        "total_penalties": av["total_penalties_paid"],
-                        "payoff_order": av["payoff_order"],
+                        "months_to_payoff": av["months_to_payoff"],  # type: ignore[index]
+                        "total_interest": av["total_interest_paid"],  # type: ignore[index]
+                        "total_penalties": av["total_penalties_paid"],  # type: ignore[index]
+                        "payoff_order": av["payoff_order"],  # type: ignore[index]
                     },
                     "snowball": {
-                        "months_to_payoff": sn["months_to_payoff"],
-                        "total_interest": sn["total_interest_paid"],
-                        "total_penalties": sn["total_penalties_paid"],
-                        "payoff_order": sn["payoff_order"],
+                        "months_to_payoff": sn["months_to_payoff"],  # type: ignore[index]
+                        "total_interest": sn["total_interest_paid"],  # type: ignore[index]
+                        "total_penalties": sn["total_penalties_paid"],  # type: ignore[index]
+                        "payoff_order": sn["payoff_order"],  # type: ignore[index]
                     },
-                    "interest_saved_by_avalanche": r["interest_saved_by_avalanche"],
-                    "months_saved_by_avalanche": r["months_saved_by_avalanche"],
+                    "interest_saved_by_avalanche": r["interest_saved_by_avalanche"],  # type: ignore[index]
+                    "months_saved_by_avalanche": r["months_saved_by_avalanche"],  # type: ignore[index]
                 }
 
             run_fn = calculate_avalanche if strategy != "snowball" else calculate_snowball
             r = run_fn(debt_objs, budget)
             return {
                 "strategy": strategy,
-                "months_to_payoff": r["months_to_payoff"],
-                "total_interest_paid": r["total_interest_paid"],
-                "total_penalties_paid": r["total_penalties_paid"],
-                "payoff_order": r["payoff_order"],
-                # First 3 months so Claude can verify the math makes sense
-                "first_3_months": r["schedule"][:3],
+                "months_to_payoff": r["months_to_payoff"],  # type: ignore[index]
+                "total_interest_paid": r["total_interest_paid"],  # type: ignore[index]
+                "total_penalties_paid": r["total_penalties_paid"],  # type: ignore[index]
+                "payoff_order": r["payoff_order"],  # type: ignore[index]
+                # Include first 3 months so the model can sanity-check the math
+                "first_3_months": r["schedule"][:3],  # type: ignore[index]
             }
 
         except ValueError as exc:
@@ -210,8 +225,8 @@ def _execute_tool(name: str, inputs: dict, debts: Optional[list[Debt]]) -> dict:
     if name == "lookup_fee_clause":
         try:
             from src.rag.knowledge_base import get_vector_store
-            k = min(int(inputs.get("k", 4)), 8)
-            docs = get_vector_store().similarity_search(inputs["query"], k=k)
+            k = min(int(inputs.get("k", 4)), 8)  # type: ignore[arg-type]
+            docs = get_vector_store().similarity_search(inputs["query"], k=k)  # type: ignore[arg-type]
             if not docs:
                 return {
                     "clauses": [],
@@ -237,17 +252,30 @@ def _execute_tool(name: str, inputs: dict, debts: Optional[list[Debt]]) -> dict:
 
 def run_agent(
     question: str,
-    debts: Optional[list[Debt]] = None,
+    debts: list[Debt] | None = None,
     max_iterations: int = 10,
-) -> tuple[str, list[dict]]:
+) -> tuple[str, list[dict[str, object]]]:
     """
-    Run the debt advisor agent and return (final_answer, tool_call_trace).
+    Run the debt advisor agent and return the final answer with a tool-call trace.
 
     Implements the Anthropic multi-turn tool use protocol:
       user → assistant (tool_use) → user (tool_result) → … → assistant (end_turn)
 
     Prompt caching is applied to the static system prompt and tool definitions
-    so repeated calls within the 5-minute TTL window hit the cache.
+    so repeated calls within the 5-minute TTL window amortise the tokenisation cost.
+
+    Args:
+        question: The user's natural-language question or request.
+        debts: The user's current debt portfolio to make available via the
+            ``get_user_debts`` tool.  Pass None if no portfolio has been loaded.
+        max_iterations: Maximum number of model calls before the loop is forcibly
+            terminated.  Acts as a safety cap against infinite tool-call loops.
+
+    Returns:
+        A tuple of (answer, tool_trace) where:
+            answer (str): The model's final text response.
+            tool_trace (list[dict]): Each entry records the tool name, inputs,
+                and result for every tool call made during the session.
     """
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -259,7 +287,7 @@ def run_agent(
     system = [{"type": "text", "text": _SYSTEM, "cache_control": {"type": "ephemeral"}}]
 
     messages: list[dict] = [{"role": "user", "content": question}]
-    tool_trace: list[dict] = []
+    tool_trace: list[dict[str, object]] = []
 
     for _ in range(max_iterations):
         response = client.messages.create(
@@ -297,7 +325,7 @@ def run_agent(
 
         messages.append({"role": "user", "content": tool_results})
 
-    # Safety fallback — return the last text seen if the loop cap was hit
+    # Safety fallback — return the last text seen if the iteration cap was hit
     for msg in reversed(messages):
         content = msg.get("content")
         if isinstance(content, list):
