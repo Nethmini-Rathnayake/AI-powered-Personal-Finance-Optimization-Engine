@@ -2,380 +2,455 @@
 
 <img src="https://img.shields.io/badge/FinOps_Engine-v1.0.0-0a0a0a?style=for-the-badge&logo=lightning&logoColor=00ff88" alt="version"/>
 
-# 💳 FinOps Engine
-### *Cloud-Native Financial Operations & Intelligent Debt Orchestration*
+# FinOps Engine
+### *Debt Payoff Optimizer with Agentic AI Advisor*
 
-> **Stop paying the Interest Tax.**
-> FinOps Engine bridges the gap between messy real-world transactions and mathematically optimal debt repayment — powered by deterministic algorithms and RAG-grounded AI.
+> **Stop paying the interest tax.**  
+> FinOps Engine turns your debt portfolio into a mathematically optimal payoff plan — then lets an AI advisor reason over it in plain English.
 
 <br/>
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![LangChain](https://img.shields.io/badge/LangChain-0.2-1C3C3C?style=flat-square&logo=chainlink&logoColor=white)](https://langchain.com)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
+[![Anthropic](https://img.shields.io/badge/Anthropic-Claude_Sonnet-D97706?style=flat-square)](https://anthropic.com)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-FF6B35?style=flat-square)](https://trychroma.com)
-[![CI/CD](https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
-[![Security](https://img.shields.io/badge/SAST-Bandit_+_Safety-red?style=flat-square&logo=shield&logoColor=white)]()
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io)
+[![Security](https://img.shields.io/badge/SAST-Bandit_+_pip--audit-red?style=flat-square&logo=shield&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 <br/>
 
-[Features](#-key-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [API Docs](#-api-reference) · [DevSecOps](#️-devsecops-fortress) · [Roadmap](#-roadmap)
+[Features](#-key-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [API Docs](#-api-reference) · [DevSecOps](#-devsecops) · [Roadmap](#-roadmap)
 
 </div>
 
 ---
 
-## 🧠 What Is FinOps Engine?
+## What Is FinOps Engine?
 
-**FinOps Engine** is a cloud-native financial operations tool built for the intersection of **software engineering**, **NLP**, and **DevSecOps**.
-
-Unlike generic chatbots that hallucinate financial advice, FinOps Engine uses a hybrid approach:
+**FinOps Engine** is a personal finance tool built at the intersection of software engineering, AI, and DevSecOps. It combines a deterministic debt math engine with an agentic AI advisor that reasons across your actual portfolio.
 
 | Layer | What It Does | Why It Matters |
 |-------|-------------|----------------|
-| 🔤 **NLP Engine** | Maps `"AMZN Mktp US*2B3K9"` → `"Shopping"` | Turns noise into structured data |
-| 📚 **RAG Pipeline** | Answers *"Why did my APR change?"* from actual bank PDFs | Grounded, not hallucinated |
-| 📐 **Optimizer** | Runs Avalanche & Snowball algorithms in pure Python | 100% deterministic math |
-| 🔐 **DevSecOps** | Bandit + Safety + GitHub Actions on every push | Production-grade security |
+| **Math Engine** | Full amortization — daily compounding, promo APRs, prepayment penalties | 100% deterministic, no approximation |
+| **Agentic AI** | Claude Sonnet calls tools autonomously before answering | Grounded answers, not hallucinations |
+| **RAG Pipeline** | Semantic search over bank Terms & Conditions PDFs | Cites the actual clause, not the internet |
+| **DevSecOps** | Bandit + pip-audit + Docker + Prometheus on every build | Production-grade from day one |
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🔤 Intelligent Transaction Mapping
-Uses an LLM to categorize unstructured bank transaction descriptions into clean financial clusters — turning raw statement noise into actionable spending intelligence.
+### Debt Avalanche & Snowball Optimizer
 
-```
-"AMZN Mktp US*2B3K9"     →  🛒 Shopping
-"UBER *TRIP 4F9D"         →  🚗 Travel & Transport
-"NETFLIX.COM"             →  📺 Subscriptions
-"ATM CASH ADVANCE 0041"   →  💸 Cash Advance  [⚠ HIGH RISK]
-```
-
-### 📚 Grounded RAG (Retrieval-Augmented Generation)
-When a user asks *"Why did my interest go up?"*, the RAG engine searches the bank's actual Terms & Conditions PDF — not the open internet — and returns an answer with source citations.
-
-```
-User  →  "What triggers a penalty APR on my Chase card?"
-RAG   →  [Searches: Chase_CC_Terms_2024.pdf]
-      →  "Per Section 4.2, a penalty APR of 29.99% may apply if
-          you make a late payment..." [Source: Page 11]
-```
-
-### 📐 Deterministic Debt Optimizer
-Two mathematically sound repayment strategies, implemented in pure Python with zero approximation:
+Two mathematically sound repayment strategies, run side-by-side with a full month-by-month schedule:
 
 | Strategy | Attack Order | Best For |
 |----------|-------------|----------|
-| **Debt Avalanche** ⚡ | Highest APR first | Minimizing total interest paid |
-| **Debt Snowball** ❄️ | Smallest balance first | Psychological momentum & quick wins |
+| **Debt Avalanche** | Highest APR first | Minimising total interest paid |
+| **Debt Snowball** | Smallest balance first | Psychological momentum |
 
-The API returns both side-by-side with projected payoff dates, total interest, and month-by-month schedules.
+The engine supports the full range of real-world loan terms:
 
-### 🔐 DevSecOps Ready
-Built with a **security-first** mindset required in Fintech:
-- **Zero hardcoded secrets** — all API keys managed via HashiCorp Vault
-- **SAST on every push** — Bandit scans for Python CVEs automatically
-- **Dependency auditing** — Safety checks all packages against CVE databases
-- **Non-root Docker containers** — principle of least privilege enforced
+- **Daily or monthly compounding** — matches how credit cards actually accrue interest
+- **Percent-of-balance minimums** — minimum shrinks as the balance falls (credit-card style)
+- **Promotional / intro APRs** — 0% balance-transfer offers with a countdown
+- **Variable-rate schedules** — ARM-style rate jumps at a specified month
+- **Prepayment penalties** — flat or percent-of-balance, with an optional window
+
+### Agentic AI Advisor
+
+The "Ask AI" tab connects to Claude claude-sonnet-4-6 via Anthropic's native tool-use API. The agent drives a multi-turn reasoning loop — it decides autonomously which tools to call and chains results before answering.
+
+```
+User  → "Which of my debts should I pay first, and what will I save?"
+
+Agent → [calls get_user_debts]          ← loads your portfolio
+      → [calls run_avalanche_scenario]  ← runs exact payoff math
+      → [calls lookup_fee_clause]       ← checks T&C for penalty clauses
+      → Final answer with cited numbers and source page references
+```
+
+**Three tools available to the agent:**
+
+| Tool | What It Does |
+|------|-------------|
+| `get_user_debts` | Returns the user's loaded portfolio as structured data |
+| `run_avalanche_scenario` | Runs Avalanche / Snowball / compare against the Python engine |
+| `lookup_fee_clause` | Semantic search over indexed bank T&C PDFs |
+
+Prompt caching is applied to the system prompt and tool definitions — repeated questions within the 5-minute TTL window cost significantly fewer tokens.
+
+### Multi-Currency Support
+
+The Streamlit UI supports 9 currencies out of the box: USD, EUR, GBP, AUD, CAD, JPY, INR, SGD, and LKR. All balances, interest totals, and chart labels update automatically.
+
+### RAG Knowledge Base
+
+Upload any bank Terms & Conditions PDF via `POST /index-pdf`. The document is chunked, embedded with `sentence-transformers`, and stored in ChromaDB. The agent's `lookup_fee_clause` tool then retrieves relevant clauses at query time — so answers about fees, penalty APRs, and grace periods are grounded in the actual document.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client / Browser                         │
-│                    React / Streamlit UI :3000                   │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │  REST / JSON
-┌──────────────────────────────▼──────────────────────────────────┐
-│                    FastAPI Backend :8000                         │
-│                                                                  │
-│   ┌──────────────┐   ┌───────────────┐   ┌──────────────────┐  │
-│   │  NLP Service │   │  RAG Pipeline │   │  Debt Optimizer  │  │
-│   │ (Categorizer)│   │ (LangChain)   │   │ Avalanche/Snowbal│  │
-│   └──────┬───────┘   └──────┬────────┘   └──────────────────┘  │
-└──────────┼─────────────────┼─────────────────────────────────── ┘
-           │                 │
-  ┌────────▼───────┐  ┌──────▼────────────────────┐
-  │  LLM API       │  │  ChromaDB Vector DB :8001  │
-  │  (via Vault)   │  │  Bank PDF embeddings       │
-  └────────────────┘  └───────────────────────────-┘
+┌─────────────────────────────────────────────────────────┐
+│               Streamlit UI  (app.py)                    │
+│   Manual Input │ Upload CSV │ Ask AI                    │
+└──────────────────────┬──────────────────────────────────┘
+                       │  Python imports
+┌──────────────────────▼──────────────────────────────────┐
+│              FastAPI Backend  :8000                      │
+│                                                         │
+│   /analyze   /analyze/csv   /ask   /index-pdf           │
+│       │            │          │         │               │
+│   ┌───▼────┐  ┌────▼───┐  ┌──▼──────┐  │               │
+│   │ Debt   │  │ CSV    │  │Agentic  │  │               │
+│   │ Engine │  │ Parser │  │Advisor  │  │               │
+│   └───┬────┘  └────────┘  └──┬──────┘  │               │
+└───────┼─────────────────────┼──────────┼───────────────┘
+        │                     │          │
+        │              ┌──────▼──────┐   │
+        │              │ Anthropic   │   │
+        │              │ Claude API  │   │
+        │              └─────────────┘   │
+        │                               │
+        │              ┌────────────────▼──────────┐
+        │              │  ChromaDB  (local persist) │
+        │              │  Bank PDF embeddings        │
+        │              └───────────────────────────-┘
+        │
+ Pure Python math
+ (no external dep)
 ```
 
 ### Data Flow
 
 ```
-Raw CSV Statement
-       │
-       ▼
-data_processor.py  ──►  Cleaned DataFrame  ──►  Risk Segments
-       │
-       ▼
-nlp_categorizer.py ──►  "AMZN" → "Shopping"
-       │
-       ▼
-optimizer.py       ──►  Avalanche Plan  ──►  JSON Response
-                   └──►  Snowball Plan  ──►  JSON Response
+Manual input / CSV upload
+        │
+        ▼
+src/ingestor/parser.py  ──►  list[Debt]
+        │
+        ▼
+src/engine/avalanche.py ──►  Avalanche plan  ──►  JSON / Streamlit UI
+                        └──►  Snowball plan   ──►  JSON / Streamlit UI
+
+User question (Ask AI tab)
+        │
+        ▼
+src/rag/agent.py  ──►  multi-turn tool loop  ──►  grounded answer + trace
 ```
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
-FinOps-Engine/
+AI-powered-Personal-Finance-Optimization-Engine/
 │
-├── 📁 data/
-│   ├── raw/                    # Kaggle CC dataset (not committed)
-│   ├── processed/              # Cleaned CSVs (not committed)
-│   └── bank_pdfs/             # T&C source documents for RAG
+├── app.py                     # Streamlit UI entry point
 │
-├── 📁 src/
-│   ├── data_processor.py      # Data cleaning & feature engineering
-│   ├── rag_engine.py          # ChromaDB + LangChain RAG pipeline
-│   ├── optimizer.py           # Avalanche & Snowball algorithms
-│   └── main.py                # FastAPI app entry point
+├── src/
+│   ├── api/
+│   │   └── main.py            # FastAPI app (5 endpoints + Prometheus)
+│   ├── engine/
+│   │   └── avalanche.py       # Full amortization math engine
+│   ├── ingestor/
+│   │   └── parser.py          # CSV bank statement parser
+│   └── rag/
+│       ├── agent.py           # Anthropic tool-use agentic loop
+│       └── knowledge_base.py  # ChromaDB PDF indexing & search
 │
-├── 📁 tests/
-│   ├── test_optimizer.py      # Unit tests for financial math
-│   ├── test_rag.py            # RAG retrieval accuracy tests
-│   └── conftest.py            # Pytest fixtures
+├── tests/
+│   ├── test_avalanche.py      # Financial math unit tests
+│   ├── test_api.py            # FastAPI endpoint tests
+│   ├── test_agent.py          # Agent tool dispatch tests
+│   └── test_ingestor.py       # CSV parser tests
 │
-├── 📁 .github/
+├── .github/
 │   └── workflows/
-│       └── ci.yml             # Lint → Security scan → Docker build
+│       └── ci.yml             # Lint → Security → Test → Docker build
 │
-├── 🐳 Dockerfile              # Non-root, multi-stage container
-├── 🐳 docker-compose.yml      # Backend + ChromaDB orchestration
-├── 📋 requirements.txt        # All dependencies pinned
-├── 🔒 .env.example            # Template — never commit .env
-├── 📖 README.md               # You are here
-└── 📄 LICENSE                 # MIT
+├── Dockerfile                 # Non-root, multi-stage container
+├── docker-compose.yml         # App + Prometheus
+├── prometheus.yml             # Prometheus scrape config
+├── requirements.txt           # All dependencies pinned
+├── pyproject.toml             # pytest + bandit config
+├── .env.example               # Template — never commit .env
+└── LICENSE                    # MIT
 ```
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Prerequisites
-- **Docker** & Docker Compose
-- **Python 3.11+** (for local dev)
-- An **OpenAI** or **Gemini Pro** API key
+
+- **Python 3.11+**
+- An **Anthropic API key** (for the Ask AI tab and `/ask` endpoint)
+- **Docker** & Docker Compose (optional — for containerised deployment)
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Nethmini-Rathnayake/FinOps-Engine.git
-cd FinOps-Engine
+git clone https://github.com/Nethmini-Rathnayake/AI-powered-Personal-Finance-Optimization-Engine.git
+cd AI-powered-Personal-Finance-Optimization-Engine
 ```
 
 ### 2. Configure Environment
 
 ```bash
 cp .env.example .env
-# Open .env and add your API key:
-# API_KEY=your_api_key_here
+# Edit .env and add your key:
+# ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-### 3. Launch with Docker
+### 3a. Run Locally (Streamlit UI)
 
 ```bash
-# Build and start all services
-docker compose up --build
-
-# Or run just the API
-docker build -t finops-engine .
-docker run -p 8000:8000 --env-file .env finops-engine
-```
-
-### 4. Access the Services
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| 📡 API | http://localhost:8000 | FastAPI backend |
-| 📖 Docs | http://localhost:8000/docs | Interactive Swagger UI |
-| 🗄️ ChromaDB | http://localhost:8001 | Vector store |
-
-### 5. Local Development (no Docker)
-
-```bash
-# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Run the API
-uvicorn src.main:app --reload --port 8000
+# Start the Streamlit UI
+streamlit run app.py
 ```
+
+Open [http://localhost:8501](http://localhost:8501) — the UI loads immediately. The Ask AI tab activates once `ANTHROPIC_API_KEY` is set.
+
+### 3b. Run the FastAPI Backend
+
+```bash
+uvicorn src.api.main:app --reload --port 8000
+```
+
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| Prometheus metrics | http://localhost:8000/metrics |
+
+### 3c. Run with Docker
+
+```bash
+docker compose up --build
+```
+
+This starts the FastAPI backend on `:8000` and Prometheus on `:9090`.
 
 ---
 
-## 📡 API Reference
+## API Reference
 
-### `POST /api/optimizer/compare`
-Run both Avalanche and Snowball strategies side-by-side.
+### `POST /analyze`
+
+Run Avalanche (and optionally Snowball) on a JSON debt list.
 
 ```json
 // Request
 {
   "debts": [
-    { "name": "Chase Sapphire", "balance": 5400, "apr": 0.24, "min_payment": 50 },
-    { "name": "HSBC Personal",  "balance": 2100, "apr": 0.18, "min_payment": 25 }
+    {
+      "name": "Chase Sapphire",
+      "balance": 5400,
+      "apr": 0.2399,
+      "min_payment": 50,
+      "compounding": "daily",
+      "promo_apr": 0.0,
+      "promo_months": 6
+    },
+    {
+      "name": "Student Loan",
+      "balance": 15000,
+      "apr": 0.0675,
+      "min_payment": 150
+    }
   ],
-  "monthly_budget": 500
+  "monthly_budget": 600,
+  "compare_with_snowball": true
 }
 
-// Response
+// Response (compare_with_snowball=true)
 {
-  "avalanche": { "months_to_payoff": 14, "total_interest_paid": 487.32 },
-  "snowball":  { "months_to_payoff": 15, "total_interest_paid": 531.90 },
-  "recommendation": {
-    "interest_saved_by_avalanche": 44.58,
-    "best_financial": "avalanche",
-    "best_psychological": "snowball"
-  }
+  "avalanche": {
+    "months_to_payoff": 38,
+    "total_interest_paid": 1842.17,
+    "total_penalties_paid": 0.0,
+    "payoff_order": ["Chase Sapphire", "Student Loan"],
+    "schedule": [...]
+  },
+  "snowball": { ... },
+  "interest_saved_by_avalanche": 63.44,
+  "months_saved_by_avalanche": 1
 }
 ```
 
-### `POST /api/transactions/categorize`
-NLP-categorize raw bank transaction descriptions.
+### `POST /analyze/csv`
+
+Upload a CSV file and receive an Avalanche payoff plan.
+
+Required CSV columns: `name`, `balance`, `apr` (decimal, e.g. `0.2399`), `min_payment`
+
+```bash
+curl -X POST http://localhost:8000/analyze/csv \
+  -F "file=@my_debts.csv" \
+  -F "monthly_budget=600"
+```
+
+### `POST /ask`
+
+Ask the agentic AI advisor a natural-language question.
 
 ```json
 // Request
-{ "descriptions": ["AMZN Mktp US*2B", "UBER *TRIP", "ATM CASH ADV"] }
+{
+  "question": "Which of my debts should I prioritise, and what will I save?",
+  "debts": [
+    { "name": "Chase Sapphire", "balance": 5400, "apr": 0.2399, "min_payment": 50 },
+    { "name": "Student Loan",   "balance": 15000, "apr": 0.0675, "min_payment": 150 }
+  ]
+}
 
 // Response
 {
-  "results": [
-    { "description": "AMZN Mktp US*2B", "category": "Shopping" },
-    { "description": "UBER *TRIP",      "category": "Travel & Transport" },
-    { "description": "ATM CASH ADV",    "category": "Cash Advance" }
+  "answer": "Based on the Avalanche strategy with a $600 budget, you should prioritise Chase Sapphire (23.99% APR)...",
+  "tool_trace": [
+    { "tool": "get_user_debts",         "input": {}, "result": {...} },
+    { "tool": "run_avalanche_scenario", "input": {...}, "result": {...} }
   ]
 }
 ```
 
-### `POST /api/rag/ask`
-Ask a question grounded in your bank's Terms & Conditions.
+### `POST /index-pdf`
 
-```json
-// Request
-{ "question": "What triggers a penalty APR?", "bank_name": "Chase" }
+Index a bank Terms & Conditions PDF into ChromaDB.
 
-// Response
-{
-  "answer": "Per Section 4.2, a penalty APR of 29.99% applies when...",
-  "sources": [{ "page": 11, "bank": "Chase", "excerpt": "..." }]
-}
+```bash
+curl -X POST http://localhost:8000/index-pdf \
+  -F "file=@Chase_CC_Terms_2024.pdf"
+
+# Response
+{ "status": "indexed", "chunks": 142, "file": "Chase_CC_Terms_2024.pdf" }
 ```
+
+### `GET /health`
+
+Liveness probe — returns `{"status": "ok"}`.
 
 ---
 
-## 🛡️ DevSecOps Fortress
+## DevSecOps
 
-Every push to `main` or `develop` triggers the full CI/CD pipeline:
+Every push to `main` triggers the full CI pipeline:
 
 ```
 Push / Pull Request
        │
        ▼
  ┌─────────────────────────────┐
- │  Job 1: Lint & Security     │
- │  ├── flake8  (style)        │
+ │  Security Scan              │
  │  ├── bandit  (SAST)         │
- │  └── safety  (CVE check)    │
+ │  └── pip-audit (CVE check)  │
  └──────────┬──────────────────┘
             │ PASS
             ▼
  ┌─────────────────────────────┐
- │  Job 2: Test Suite          │
- │  └── pytest --cov           │
+ │  Test Suite                 │
+ │  └── pytest -v              │
  └──────────┬──────────────────┘
             │ PASS
             ▼
  ┌─────────────────────────────┐
- │  Job 3: Docker Build        │
+ │  Docker Build               │
  │  └── Build & tag image      │
  └─────────────────────────────┘
 ```
 
-### Security Principles
-- 🔑 **Zero hardcoded secrets** — Use `.env` locally, Vault in production
-- 🐳 **Non-root containers** — All Docker images run as `appuser`
-- 🔍 **Dependency pinning** — All versions locked in `requirements.txt`
-- 📊 **Audit artifacts** — Bandit & Safety reports uploaded on every run
+**Security principles:**
+
+- **No hardcoded secrets** — API key loaded from `.env`, never committed
+- **Non-root Docker container** — runs as `appuser` (principle of least privilege)
+- **Pinned dependencies** — all versions locked in `requirements.txt`
+- **SAST on every push** — Bandit scans for Python security issues
+- **CVE auditing** — pip-audit checks packages against known vulnerabilities
+- **Prometheus observability** — request latency and error rates tracked at `/metrics`
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
-# Run full test suite with coverage
-pytest tests/ -v --cov=src --cov-report=term-missing
+# Full test suite
+pytest tests/ -v
 
-# Run only financial math tests
-pytest tests/test_optimizer.py -v
+# Financial math only
+pytest tests/test_avalanche.py -v
+
+# API endpoint tests
+pytest tests/test_api.py -v
 
 # Run security scan locally
-bandit -r src/ -ll
-safety check -r requirements.txt
+bandit -r src/
+pip-audit -r requirements.txt
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technology | Purpose |
 |----------|-----------|---------|
 | **Language** | Python 3.11 | Core runtime |
-| **API Framework** | FastAPI | REST endpoints + auto Swagger docs |
-| **AI / NLP** | LangChain + OpenAI/Gemini | RAG pipeline & transaction NLP |
-| **Vector Store** | ChromaDB | Embedding storage for bank PDFs |
-| **Data Processing** | Pandas, NumPy, SciPy | Cleaning, feature engineering |
-| **PDF Parsing** | pdfplumber, PyPDF2 | T&C document ingestion |
+| **UI** | Streamlit + Plotly | Interactive dashboard with charts |
+| **API Framework** | FastAPI + Uvicorn + Pydantic | REST endpoints + auto Swagger docs |
+| **AI Agent** | Anthropic SDK (Claude claude-sonnet-4-6) | Multi-turn tool use with prompt caching |
+| **Debt Math** | Pure Python | Deterministic full amortization engine |
+| **Vector Store** | ChromaDB + sentence-transformers | Embedding storage & semantic search |
+| **PDF Parsing** | pypdf + pymupdf | Bank T&C document ingestion |
+| **Observability** | Prometheus | Request metrics via FastAPI instrumentator |
 | **Containerization** | Docker + Compose | Reproducible environments |
-| **CI/CD** | GitHub Actions | Automated pipeline |
-| **SAST** | Bandit | Python security vulnerability scanning |
-| **Dependency Audit** | Safety | CVE checks on pip packages |
-| **Secret Management** | HashiCorp Vault | Zero hardcoded API keys |
+| **CI/CD** | GitHub Actions | Automated security → test → build pipeline |
+| **SAST** | Bandit | Python static security analysis |
+| **Dependency Audit** | pip-audit | CVE checks on all packages |
 
 ---
 
-## 📈 Roadmap
+## Roadmap
 
-- [x] Core Avalanche & Snowball optimizer
-- [x] NLP transaction categorizer
-- [x] RAG pipeline with ChromaDB
-- [x] CI/CD with security scanning
-- [x] Dockerized microservices
-- [ ] **Plaid API integration** — live bank syncing
-- [ ] **Multi-currency support** — international debt optimization
-- [ ] **React dashboard** — interactive repayment visualizer
-- [ ] **Scheduler** — monthly automated reports via email
+- [x] Avalanche & Snowball optimizer with full amortization
+- [x] Daily/monthly compounding, promo APRs, prepayment penalties
+- [x] Agentic AI advisor (Anthropic tool use, multi-turn reasoning)
+- [x] RAG knowledge base (ChromaDB + bank T&C PDFs)
+- [x] Streamlit UI with interactive Plotly charts
+- [x] Multi-currency support (USD, EUR, GBP, AUD, CAD, JPY, INR, SGD, LKR)
+- [x] FastAPI backend with CSV upload
+- [x] Dockerized with Prometheus observability
+- [x] CI/CD with SAST and CVE scanning
+- [ ] **Plaid API integration** — live bank account syncing
+- [ ] **React dashboard** — replace Streamlit for production deployments
+- [ ] **Scheduler** — monthly automated payoff progress reports
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please read the guidelines before opening a PR.
+## Contributing
 
 ```bash
 # 1. Fork the repo and clone your fork
-git clone https://github.com/Nethmini-Rathnayake/FinOps-Engine.git
+git clone https://github.com/Nethmini-Rathnayake/AI-powered-Personal-Finance-Optimization-Engine.git
 
 # 2. Create a feature branch
 git checkout -b feat/your-feature-name
 
-# 3. Make changes, then lint and test
-flake8 src/ && pytest tests/ -v
+# 3. Install dependencies and run tests
+pip install -r requirements.txt
+pytest tests/ -v
 
 # 4. Commit using Conventional Commits
-git commit -m "feat: add multi-currency support"
+git commit -m "feat: add your feature"
 
 # 5. Push and open a Pull Request
 git push origin feat/your-feature-name
@@ -383,7 +458,7 @@ git push origin feat/your-feature-name
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
@@ -393,8 +468,8 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 **Built by [Nethmini Rathnayake](https://github.com/Nethmini-Rathnayake)**
 
-*Showcasing Software Engineering + DevSecOps expertise in the Fintech sector*
+*Demonstrating Software Engineering + AI + DevSecOps skills in the Fintech domain*
 
-⭐ **Star this repo** if it helped you — it means a lot!
+Star this repo if it helped you — it means a lot!
 
 </div>
